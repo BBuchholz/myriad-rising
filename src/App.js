@@ -3,7 +3,15 @@ import './App.css';
 
 function App() {
   const [thought, setThought] = useState({ date: new Date().toISOString().split('T')[0], text: '' });
-  const saveThought = () => console.log("Commiting thought to memory…")
+  const saveThought = async () => {
+    const resp = await fetch('/api/post-memory', { 
+      method: 'POST',
+      body: JSON.stringify(thought),
+    });
+    const { error, message } = await resp.json();
+    
+    error ? console.error(error) : console.log(message);
+  }
   const handleThoughtChange = e => setThought({ ...thought, [e.target.name]: e.target.value})
 
   return (
