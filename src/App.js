@@ -22,8 +22,6 @@ function App() {
     setMemories(data)
   }
 
-  
-
   const handleThoughtChange = e => setThought({ ...thought, [e.target.name]: e.target.value})
 
   const memCard = (m, i) => <div className="mem-card" key={i}>{m.data.text}</div>
