@@ -1,65 +1,49 @@
-import './App.scss';
-import SplashScreen from './SplashScreen';
-import SandboxEntryForm from './SandboxEntryForm';
-import OldMyriadNavBar from './OldMyriadNavBar';
-import OldMyriadXmlIOPanel from './OldMyriadXmlIOPanel';
-import OldMyriadLogEntryForm from './OldMyriadLogEntryForm';
-import MyriadNavBarMain from './MyriadNavBarMain';
-import WxrdsView from './WxrdsView';
-import LogEntries from './LogEntries';
-import NotesView from './NotesView';
-import DemoContext from './context/DemoContext';
-import MemoriesComponent from './MemoriesComponent';
-
 import React, { useState } from 'react';
-import { 
-  BrowserRouter as Router,
-  Switch,
-  Route,
-} from "react-router-dom";
-
-import Container from 'react-bootstrap/Container';
+import './App.css';
 
 function App() {
-    const demoHook = useState("demo");
-    return (
-        <DemoContext.Provider value= {demoHook}>
-            <Router>
-                <Container fluid="md">
-                    <MyriadNavBarMain />
-                    <OldMyriadNavBar />
-                        <h2>
-                            <Switch>
-                                <Route path="/wxrds">
-                                    <WxrdsView />
-                                </Route>
-                                <Route path="/entries">
-                                    <LogEntries />
-                                </Route>
-                                <Route path="/xmlio">
-                                    <OldMyriadXmlIOPanel />
-                                </Route>
-                                <Route path="/log-entry-prev">
-                                    <SandboxEntryForm />
-                                </Route>
-                                <Route path="/log-entry">
-                                    <OldMyriadLogEntryForm />
-                                </Route>
-                                <Route path="/notes">
-                                    <NotesView />
-                                </Route>
-                                <Route path="/memories">
-                                    <MemoriesComponent />
-                                </Route>
-                                <Route path="/">
-                                    <SplashScreen />
-                                </Route>
-                            </Switch>
-                        </h2>
-                </Container>
-            </Router>
-        </DemoContext.Provider>
-    );
+  const [thought, setThought] = useState({ date: new Date().toISOString().split('T')[0], text: '' });
+  const [memories, setMemories] = useState([])
+
+  const saveThought = async () => {
+    const resp = await fetch('/api/memories', { 
+      method: 'POST',
+      body: JSON.stringify(thought) 
+    })
+    
+    const { error, newMem } = await resp.json()
+
+    error ? console.error(error) : setMemories([ ...memories, newMem ])
+  }
+
+  const getMemories = async () => {
+    const resp = await fetch('/api/memories')
+    const data = await resp.json()
+    setMemories(data)
+  }
+
+  
+
+  const handleThoughtChange = e => setThought({ ...thought, [e.target.name]: e.target.value})
+
+  const memCard = (m, i) => <div className="mem-card" key={i}>{m.data.text}</div>
+
+  const renderMemories = memories ? memories.map(memCard) : null
+
+  return (
+    <div className="App">
+        <header><h1>Memories</h1></header>
+        <main>
+          <div id="input">
+            <input type="date" name="date" value={thought.date} onChange={handleThoughtChange}/>
+            <input type="text" name="text" placeholder="Your thought" value={thought.text} onChange={handleThoughtChange}/>
+            <button onClick={saveThought} disabled={!thought.text}>Commit to memory</button>
+            <button onClick={getMemories}>Show all memories</button>
+          </div>
+          <div id="memories">{ renderMemories }</div>
+        </main>
+    </div>
+  );
 }
 
 export default App;
